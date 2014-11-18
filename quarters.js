@@ -1,10 +1,16 @@
-var originRe = /M(\s*)[0-9.]*[\s,][0-9.]*/;
-var surface = document.getElementById('surface');
-var circle = document.getElementById('circle');
-var waveOffset = 0.1;
-var gridScale = 2.25;
-var numRings = 5;
+var originRe = /M(\s*)[0-9.]*[\s,][0-9.]*/,
+    surface = document.getElementById('surface'),
+    circle = document.getElementById('circle'),
+    offsetCtrl = document.getElementById('waveOffset'),
+    scaleCtrl = document.getElementById('gridScale'),
+    offsetDisplay = document.getElementById('waveOffsetVal'),
+    scaleDisplay = document.getElementById('scaleOffsetVal'),
+    waveOffset = Number(offsetCtrl.value),
+    gridScale = Number(scaleCtrl.value),
+    numRings = 5;
 
+offsetDisplay.innerHTML = waveOffset;
+scaleDisplay.innerHTML = gridScale;
 
 /* generate diagonal grid points in n concentric rings */
 function makeGrid(n){
@@ -54,13 +60,40 @@ function cloneCircle(circle, dx, dy, animOffset){
   surface.appendChild(clone);
 }
 
+function generateWaves(coords){
+  //start at 1. 0 is trivial, it's the original circle
+  for (var i = 0; i < coords.length; i++){
+    coords[i].forEach(function(pos){
+      cloneCircle(circle, pos[0], pos[1], waveOffset*i );
+    });
+  }
+}
+
+function resetSurface(){
+  while(surface.firstChild){
+    surface.removeChild(surface.firstChild);
+  }
+}
+
+
 //make a grid
 var gridCoords = makeGrid(numRings);
 
 //then generate the waaaves:
-//start at 1. 0 is trivial, it's the original circle
-for (var i = 1; i < gridCoords.length; i++){
-  gridCoords[i].forEach(function(pos){
-    cloneCircle(circle, pos[0], pos[1], waveOffset*i );
-  });
-}
+generateWaves(gridCoords);
+
+//watch for updates and re-draw when config changes
+offsetCtrl.addEventListener('change', function(){
+  waveOffset = Number(this.value);
+  offsetDisplay.innerHTML = waveOffset;
+  resetSurface();
+  generateWaves(gridCoords);
+});
+
+scaleCtrl.addEventListener('change', function(){
+  gridScale = Number(this.value);
+  scaleDisplay.innerHTML = gridScale;
+  resetSurface();
+  gridCoords = makeGrid(numRings);
+  generateWaves(gridCoords);
+});
